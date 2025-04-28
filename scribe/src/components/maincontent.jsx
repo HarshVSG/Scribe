@@ -5,15 +5,15 @@ import Timetable from './timetable';
 import StudyPDF from './studypdf';
 import Settings from './settings';
 
-function MainContent({ activePage }) {
+function MainContent({ activePage, userId }) {
     return (
-        <div className="main-content">
-            {activePage === 'Notes' && <Notes />}
-            {activePage === 'Studypdf' && <StudyPDF />}
-            {activePage === 'to-do' && <Todo />}
-            {activePage === 'timetable' && <Timetable />}
-            {activePage === 'settings' && <Settings />}
-        </div>
+      <div className="main-content">
+        {activePage === 'Notes' && <Notes userId={userId} />}
+        {activePage === 'Studypdf' && <StudyPDF />}
+        {activePage === 'to-do' && <Todo />}
+        {activePage === 'timetable' && <Timetable />}
+        {activePage === 'settings' && <Settings />}
+      </div>
     );
 }
 
