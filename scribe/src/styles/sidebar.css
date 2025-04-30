@@ -6,10 +6,10 @@
 @import url('https://fonts.cdnfonts.com/css/skeksis');
 h2 {
     color: #9d8263;
-    margin-top: 210px;
-    font-size: 50px;
-    font-weight: 500;
-    font-family: 'Skeksis', sans-serif;
+    margin-top: 230px;
+    font-size: 40px;
+    font-weight: 400;
+    font-family: 'ZH', sans-serif;
     align-self: center;
     justify-self: center;
 }
@@ -21,11 +21,11 @@ h2 {
     margin-bottom: 10px;
     cursor: pointer;
     border-radius: 0px 30px 30px 0px;
-    font-weight: 500;
+    font-weight: 400;
     width: 240px;
     transition: all 0.3s ease;
-    font-family: 'Times New Roman', Times, serif;
-    font-size: 20px;
+    font-family: 'ZH', sans-serif;
+    font-size: 16px;
     text-align: left;
 
   }
@@ -56,7 +56,7 @@ h2 {
     margin-top: 35%;
     list-style: none;
     padding: 0;
-    font-size: 20px;
+    font-size: 16px;
     
 }
 
@@ -69,9 +69,10 @@ h2 {
     margin-bottom: 10px;
     cursor: pointer;
     border-radius: 0px 30px 30px 0px;
-    font-weight: 500;
+    font-weight: 400;
     width: 240px;
     transition: all 0.3s ease;
+    font-family: 'ZH', sans-serif;
 }
 
 .sidebar ul li:hover {
@@ -90,4 +91,121 @@ h2 {
 .main-content {
     margin-left: 20%;
     padding: 20px;
+}
+
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 23px;  /* Changed from 20px to 23px */
+  left: 20px;
+  z-index: 1000;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.menu-icon {
+  width: 30px;
+  height: 25px;
+  position: relative;
+  cursor: pointer;
+}
+
+.menu-icon span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background: #035550;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.menu-icon span:nth-child(1) { top: 0; }
+.menu-icon span:nth-child(2) { top: 10px; }
+.menu-icon span:nth-child(3) { top: 20px; }
+
+.menu-icon.open span:nth-child(1) {
+  transform: rotate(45deg);
+  top: 10px;
+}
+
+.menu-icon.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-icon.open span:nth-child(3) {
+  transform: rotate(-45deg);
+  top: 10px;
+}
+
+@media screen and (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    width: 70%;  /* Reduced from 80% */
+    background: white;
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar ul {
+    margin-top: 90px;
+  }
+
+  .sidebar ul li {
+    padding: 16px 22px;
+    width: 250px;
+    font-size: 17px;
+    margin-bottom: 16px;
+  }
+
+  .sidebar ul li:hover {
+    width: 260px;
+  }
+
+  .logout-btn {
+    width: 250px;
+    padding: 16px 22px;
+    font-size: 17px;
+    margin-bottom: 22px;
+  }
+
+  .logout-btn:hover {
+    width: 260px;
+  }
+
+  h2 {
+    margin-top: 150px;  /* Reduced from 180px */
+    font-size: 35px;  /* Slightly smaller */
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .sidebar {
+    width: 85%;  /* Wider on very small screens */
+  }
+
+  .sidebar ul li,
+  .logout-btn {
+    width: 230px;  /* Even smaller width */
+  }
+
+  .sidebar ul li:hover,
+  .logout-btn:hover {
+    width: 240px;
+  }
 }

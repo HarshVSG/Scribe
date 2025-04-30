@@ -1,6 +1,14 @@
 .timetable-container {
     padding: 20px;
-    background-color: #e8f5e9;
     height: 100%;
   }
+
+@media (max-width: 768px) {
+  .timetable-container {
+    padding: 60px 10px 10px 10px;
+  }
   
+  .timetable-container h1 {
+    margin: -45px 0 20px 50px;
+  }
+}

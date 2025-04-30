@@ -1,323 +1,252 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../styles/notes.css';
 
 function Notes({ userId }) {
-  const generatePastelColor = () => {
-    const hue = Math.floor(Math.random() * 360);
-    return `hsl(${hue}, 80%, 90%)`;
-  };
+  const [notes, setNotes] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  const colorOptions = [
-    '#fcf3ee',  // Original color
-    '#f8e6e6',  // Light pink
-    '#e6f3e6',  // Light green
-    '#e6e6f8',  // Light blue
-    '#f8f6e6'   // Light yellow
+  const colors = [
+    '#FFE4E1', // Misty Rose - Light Pink
+    '#E0FFFF', // Light Cyan - Ice Blue
+    '#F0FFF0', // Honeydew - Mint Green
+    '#F5F5DC', // Beige
+    '#E6E6FA', // Lavender - Light Purple
   ];
 
-  const [notes, setNotes] = useState([]);
-  const [selectedNotes, setSelectedNotes] = useState([]); // Track selected notes
-  const [showForm, setShowForm] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
-  const [editingNote, setEditingNote] = useState(null); // Track the note being edited
-  const [longPressTimer, setLongPressTimer] = useState(null);
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [hiddenNoteId, setHiddenNoteId] = useState(null);
-  const [pressTimer, setPressTimer] = useState(null);
-  const [isSelecting, setIsSelecting] = useState(false);
-
   useEffect(() => {
-    if (userId) {
-      console.log('Fetching notes for userId:', userId); // Debugging log
-      fetchNotes();
-    } else {
-      setNotes([]); // Clear notes if no userId
-    }
-  }, [userId]); // Re-fetch when userId changes
+    if (userId) fetchNotes();
+  }, [userId]);
 
   const fetchNotes = async () => {
     try {
-      const res = await axios.get(`http://localhost:5001/notes/${userId}`);
-      console.log('Fetched notes for user:', userId, res.data); // Debugging log
-      setNotes(res.data || []); // Ensure we always have an array, even if empty
-    } catch (err) {
-      console.error('Error fetching notes:', err);
-      setNotes([]); // Set to empty array on error
+      const response = await axios.get(`http://localhost:5001/notes/${userId}`);
+      setNotes(response.data);
+    } catch (error) {
+      console.error('Error fetching notes:', error);
     }
   };
 
-  const addNote = async () => {
-    if (!newTitle || !newContent || !userId) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    const backgroundColor = generatePastelColor();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
     try {
-      const response = await axios.post('http://localhost:5001/add-note', {
-        title: newTitle,
-        content: newContent,
-        userId: parseInt(userId, 10),
-        backgroundColor
-      });
+      if (editingNote) {
+        const response = await axios.put(
+          `http://localhost:5001/notes/${editingNote.id}`, 
+          {
+            title: formData.title,
+            content: formData.content,
+            userId: parseInt(userId)
+          }
+        );
 
-      if (response.data.note) {
-        setNotes(prevNotes => [...prevNotes, response.data.note]);
-        setNewTitle('');
-        setNewContent('');
-        setShowForm(false);
-      }
-    } catch (err) {
-      console.error('Error adding note:', err);
-      alert('Failed to save note');
-    }
-  };
-
-  const updateNote = async () => {
-    if (!editingNote.title || !editingNote.content) return;
-
-    try {
-      await axios.put(`http://localhost:5001/notes/${editingNote.notesid}`, {
-        title: editingNote.title,
-        content: editingNote.content,
-      });
-      setEditingNote(null); // Exit edit mode
-      fetchNotes(); // Refresh notes after updating
-    } catch (err) {
-      console.error('Error updating note', err);
-    }
-  };
-
-  const toggleSelectNote = (noteId) => {
-    setSelectedNotes((prev) =>
-      prev.includes(noteId) ? prev.filter((id) => id !== noteId) : [...prev, noteId]
-    );
-  };
-
-  const deleteSelectedNotes = async () => {
-    if (selectedNotes.length === 0) return;
-
-    try {
-      await axios.delete('http://localhost:5001/notes', {
-        data: { 
-          noteIds: selectedNotes, 
-          userId: parseInt(userId, 10) 
+        if (response.data && response.data.note) {
+          await fetchNotes(); // Refresh notes after update
+          closeForm();
         }
-      });
-      setSelectedNotes([]); // Clear selection
-      fetchNotes(); // Refresh notes after deletion
-    } catch (err) {
-      console.error('Error deleting notes', err);
-      alert('Failed to delete notes');
+      } else {
+        const response = await axios.post('http://localhost:5001/add-note', {
+          title: formData.title,
+          content: formData.content,
+          userId: parseInt(userId),
+          backgroundColor: '#fcf3ee'
+        });
+
+        if (response.data.note) {
+          await fetchNotes(); // Refresh notes after creation
+          closeForm();
+        }
+      }
+    } catch (error) {
+      console.error('Error details:', error);
+      alert(error.response?.data?.error || 'Failed to save note');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleNoteClick = (note) => {
-    if (isSelectionMode) {
-      toggleSelectNote(note.id);
-    } else {
-      setEditingNote(note);
-      setNewTitle(note.title);
-      setNewContent(note.content);
-      setShowForm(true);
-      setHiddenNoteId(note.id);
-    }
+  const handleEdit = (note) => {
+    setEditingNote({
+      ...note,
+      id: parseInt(note.id) // Ensure ID is integer
+    });
+    setFormData({
+      title: note.title,
+      content: note.content,
+      backgroundColor: note.background_color || colors[0]
+    });
+    setShowForm(true);
   };
 
-  const handleMouseDown = (note) => {
-    const timer = setTimeout(() => {
-      setIsSelectionMode(true);
-      setSelectedNotes([note.id]); // Immediately select the note
-    }, 500); // 500ms long press
-    setLongPressTimer(timer);
-  };
-
-  const handleMouseUp = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!newTitle || !newContent) return;
-
+  const handleColorChange = async (noteId, color, e) => {
+    e.stopPropagation(); // Prevent note from opening when selecting color
     try {
-      await axios.put(`http://localhost:5001/notes/${editingNote.id}`, {
-        title: newTitle,
-        content: newContent,
-        userId
+      const response = await axios.put(`http://localhost:5001/notes/${noteId}`, {
+        backgroundColor: color,
+        userId: parseInt(userId)
       });
-      
-      // Reset all states
-      setShowForm(false);
-      setEditingNote(null);
-      setNewTitle('');
-      setNewContent('');
-      setHiddenNoteId(null);
-      
-      // Fetch fresh notes
-      await fetchNotes();
-    } catch (err) {
-      console.error('Error updating note:', err);
-      alert('Failed to update note');
+      if (response.data && response.data.note) {
+        await fetchNotes();
+      }
+    } catch (error) {
+      console.error('Error updating note color:', error);
     }
   };
 
   const closeForm = () => {
     setShowForm(false);
     setEditingNote(null);
-    setNewTitle('');
-    setNewContent('');
-    setHiddenNoteId(null);
+    setFormData({ title: '', content: '' });
   };
 
-  const handleNotePress = (note) => {
-    if (isSelectionMode) {
-      toggleSelectNote(note.id);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setIsSelectionMode(true);
-      setSelectedNotes([note.id]);
-      setIsSelecting(true);
-    }, 500);
-    setPressTimer(timer);
-  };
-
-  const handleNoteRelease = (note) => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      setPressTimer(null);
-    }
-
-    if (!isSelecting && !isSelectionMode) {
-      handleNoteClick(note);
-    }
-    setIsSelecting(false);
-  };
-
-  const handleColorChange = async (note, color, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Changing color for note:', note.id, 'to:', color);
-
+  // Add delete handler
+  const handleDelete = async () => {
     try {
-      const response = await axios.put(`http://localhost:5001/notes/${note.id}`, {
-        backgroundColor: color,
-        userId: parseInt(userId, 10)
+      const response = await axios.delete('http://localhost:5001/notes', {
+        data: { noteIds: selectedNotes, userId }
       });
-
-      if (response.data.note) {
-        console.log('Color updated successfully:', response.data.note);
-        setNotes(prevNotes => prevNotes.map(n => 
-          n.id === note.id ? { ...n, background_color: color } : n
-        ));
+      if (response.data.deletedIds) {
+        await fetchNotes();
+        setSelectedNotes([]);
+        setIsSelectionMode(false);
       }
-    } catch (err) {
-      console.error('Error updating color:', err);
+    } catch (error) {
+      console.error('Error deleting notes:', error);
     }
   };
 
-  const renderColorPicker = (note) => (
-    <div className="color-picker" onClick={e => e.stopPropagation()}>
-      {colorOptions.map((color, index) => (
-        <div
-          key={index}
-          className="color-circle"
-          style={{ backgroundColor: color }}
-          onClick={(e) => handleColorChange(note, color, e)}
-        />
-      ))}
-    </div>
-  );
+  // Add selection handlers
+  const toggleNoteSelection = (noteId) => {
+    setSelectedNotes(prev => {
+      const isSelected = prev.includes(noteId);
+      if (isSelected) {
+        const newSelected = prev.filter(id => id !== noteId);
+        if (newSelected.length === 0) {
+          setIsSelectionMode(false);
+        }
+        return newSelected;
+      }
+      return [...prev, noteId];
+    });
+  };
 
-  const renderNotes = () => {
-    if (!Array.isArray(notes) || notes.length === 0) {
-      return <p>No notes available</p>;
+  // Simplified note click handler
+  const handleNoteClick = (note, e) => {
+    if (isSelectionMode) {
+      toggleNoteSelection(note.id);
+    } else {
+      handleEdit(note);
     }
+  };
 
-    return notes.map((note) => (
-      <div
-        key={note?.id || Math.random()}
-        className={`note-card ${selectedNotes.includes(note?.id) ? 'selected' : ''}
-                  ${note?.id === hiddenNoteId ? 'hidden' : ''}`}
-        style={{ backgroundColor: note.background_color || '#fcf3ee' }}
-        onMouseDown={() => handleNotePress(note)}
-        onMouseUp={() => handleNoteRelease(note)}
-        onTouchStart={() => handleNotePress(note)}
-        onTouchEnd={() => handleNoteRelease(note)}
-      >
-        <h3>{note?.title || 'Untitled'}</h3>
-        <p>{note?.content || 'No content'}</p>
-        {renderColorPicker(note)}
-      </div>
-    ));
+  // Toggle selection mode
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedNotes([]);
   };
 
   return (
     <div className="notes-container">
-      <div className="notes-header">
-        <h1>Notes</h1>
-        <div className="notes-actions">
-          {!showForm && (
-            <>
-              <button className="add-note-btn" onClick={() => {
-                setShowForm(true);
-                setEditingNote(null);
-                setNewTitle('');
-                setNewContent('');
-              }}>➕ Add Note</button>
-              {isSelectionMode && (
-                <>
-                  <button className="delete-note-btn" onClick={deleteSelectedNotes}>
-                    🗑️ Delete Selected
-                  </button>
-                  <button className="cancel-btn" onClick={() => {
-                    setIsSelectionMode(false);
-                    setSelectedNotes([]);
-                  }}>✖️ Cancel</button>
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+      <h1>Notes</h1>
 
       {showForm && (
-        <div className="note-form" style={{ backgroundColor: editingNote?.background_color || '#fcf3ee' }}>
-          <input
-            type="text"
-            placeholder="Title"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-          />
-          <textarea
-            placeholder="Content"
-            value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-          />
-          <div className="form-buttons">
-            <button onClick={() => editingNote ? handleUpdate() : addNote()}>
-              {editingNote ? 'Update' : 'Save'}
-            </button>
-            <button onClick={closeForm}>Cancel</button>
-          </div>
-        </div>
+        <>
+          <div className="note-form-overlay" onClick={closeForm} />
+          <form 
+            className="note-form" 
+            onSubmit={handleSubmit}
+            style={{ 
+              backgroundColor: editingNote?.background_color || formData.backgroundColor || colors[0]
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+              autoFocus
+            />
+            <textarea
+              placeholder="Write your note here..."
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              required
+            />
+            <div className="form-buttons">
+              <button type="submit" disabled={isLoading}>
+                {isLoading ? 'Saving...' : (editingNote ? 'Update' : 'Save')}
+              </button>
+              <button type="button" onClick={closeForm}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </>
       )}
 
       <div className="notes-list">
-        {renderNotes()}
+        {notes.map(note => (
+          <div 
+            key={note.id}
+            className={`note-card ${selectedNotes.includes(note.id) ? 'selected' : ''}`}
+            onClick={(e) => handleNoteClick(note, e)}
+            style={{ backgroundColor: note.background_color || colors[0] }}
+          >
+            <div className="select-circle" onClick={(e) => {
+              e.stopPropagation();
+              setIsSelectionMode(true);
+              toggleNoteSelection(note.id);
+            }} />
+            <h3>{note.title}</h3>
+            <p>{note.content}</p>
+            <div className="color-picker">
+              {colors.map((color, index) => (
+                <div
+                  key={index}
+                  className="color-circle"
+                  style={{ 
+                    backgroundColor: color,
+                    border: note.background_color === color ? '2px solid #666' : '1px solid rgba(0,0,0,0.1)'
+                  }}
+                  onClick={(e) => handleColorChange(note.id, color, e)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="floating-buttons">
+        {isSelectionMode && selectedNotes.length > 0 && (
+          <button 
+            className="delete-btn"
+            onClick={handleDelete}
+            aria-label="Delete selected notes"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
+            </svg>
+          </button>
+        )}
+        {!isSelectionMode && (
+          <button 
+            className="add-note-btn" 
+            onClick={() => setShowForm(true)}
+          >
+            +
+          </button>
+        )}
       </div>
     </div>
   );

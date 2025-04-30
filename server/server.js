@@ -145,34 +145,58 @@ app.post('/add-note', async (req, res) => {
   }
 });
 
-// Update a note
+// Update note endpoint - fixed
 app.put('/notes/:id', async (req, res) => {
   const { id } = req.params;
-  const { backgroundColor, userId } = req.body;
-  console.log('Updating note color:', { id, backgroundColor, userId });
+  const { title, content, userId, backgroundColor } = req.body;
+
+  console.log('Update request:', { id, title, content, userId, backgroundColor });
 
   try {
-    const result = await pool.query(
-      'UPDATE notes SET background_color = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
-      [backgroundColor, id, userId]
-    );
+    const query = `
+      UPDATE notes 
+      SET title = COALESCE($1, title),
+          content = COALESCE($2, content),
+          background_color = COALESCE($3, background_color),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4 AND user_id = $5
+      RETURNING *`;
+
+    const values = [title, content, backgroundColor, id, userId];
+    const result = await pool.query(query, values);
+    
+    console.log('Update result:', result.rows[0]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Note not found' });
     }
 
-    console.log('Updated note:', result.rows[0]);
     res.json({ note: result.rows[0] });
   } catch (err) {
     console.error('Error updating note:', err);
-    res.status(500).json({ error: 'Failed to update note' });
+    res.status(500).json({ error: `Failed to update note: ${err.message}` });
   }
 });
 
-// Delete multiple notes
+// Get favorite notes
+app.get('/notes/:userId/favorites', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const results = await pool.query(
+      'SELECT * FROM notes WHERE user_id = $1 AND is_favorite = true ORDER BY created_at DESC',
+      [userId]
+    );
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error fetching favorite notes:', err);
+    res.status(500).json({ error: 'Error fetching favorite notes' });
+  }
+});
+
+// Delete notes endpoint
 app.delete('/notes', async (req, res) => {
   const { noteIds, userId } = req.body;
-  console.log('Deleting notes:', { noteIds, userId });
 
   if (!noteIds?.length || !userId) {
     return res.status(400).json({ error: 'Missing noteIds or userId' });
@@ -183,14 +207,82 @@ app.delete('/notes', async (req, res) => {
       'DELETE FROM notes WHERE id = ANY($1::int[]) AND user_id = $2 RETURNING id',
       [noteIds, userId]
     );
-    console.log('Deleted notes:', result.rows);
-    res.json({ message: 'Notes deleted', deletedIds: result.rows.map(row => row.id) });
+    
+    res.json({ 
+      message: 'Notes deleted successfully',
+      deletedIds: result.rows.map(row => row.id)
+    });
   } catch (err) {
     console.error('Error deleting notes:', err);
     res.status(500).json({ error: 'Failed to delete notes' });
   }
 });
 
+// Add todo - Move this before the app.listen()
+app.post('/todos', async (req, res) => {
+  const { content, userId, isCompleted } = req.body;
+  console.log('Received todo request:', { content, userId, isCompleted });
+
+  try {
+    if (!content || !userId) {
+      return res.status(400).json({ error: 'Content and userId are required' });
+    }
+
+    const result = await pool.query(
+      'INSERT INTO todos (content, user_id, is_completed) VALUES ($1, $2, $3) RETURNING *',
+      [content, userId, isCompleted || false]
+    );
+    
+    console.log('Todo added successfully:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error adding todo:', err);
+    res.status(500).json({ error: `Failed to add todo: ${err.message}` });
+  }
+});
+
+// Get todos
+app.get('/todos/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM todos WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch todos' });
+  }
+});
+
+// Update todo
+app.put('/todos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { content, isCompleted, userId } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE todos SET content = COALESCE($1, content), is_completed = COALESCE($2, is_completed) WHERE id = $3 AND user_id = $4 RETURNING *',
+      [content, isCompleted, id, userId]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update todo' });
+  }
+});
+
+// Delete todo
+app.delete('/todos/:id', async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+  try {
+    await pool.query('DELETE FROM todos WHERE id = $1 AND user_id = $2', [id, userId]);
+    res.json({ message: 'Todo deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete todo' });
+  }
+});
+
+// Make sure this is at the very end of the file
 app.listen(5001, () => {
-  console.log('Server running on port 5001'); // Corrected port number
+  console.log('Server running on port 5001');
 });

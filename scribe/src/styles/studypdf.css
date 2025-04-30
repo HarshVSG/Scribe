@@ -1,6 +1,14 @@
 .studypdf-container {
     padding: 20px;
-    background-color: #fff3e0;
     height: 100%;
   }
+
+@media (max-width: 768px) {
+  .studypdf-container {
+    padding: 60px 10px 10px 10px;
+  }
   
+  .studypdf-container h1 {
+    margin: -45px 0 20px 50px;
+  }
+}

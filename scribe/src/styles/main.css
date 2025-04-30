@@ -1,9 +1,24 @@
+@font-face {
+  font-family: 'ZH';
+  src: local('ZH'),
+       url('../assets/fonts/zh-cn.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'ZH', system-ui, -apple-system, sans-serif;
+  font-weight: 300;
+}
+
 .app-container {
-    display: flex;
-  }
-  
-  .main-content {
-    flex: 1;
-    padding: 0px;
-  }
-  
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  padding: 0px;
+}

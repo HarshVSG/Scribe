@@ -10,7 +10,7 @@ function MainContent({ activePage, userId }) {
       <div className="main-content">
         {activePage === 'Notes' && <Notes userId={userId} />}
         {activePage === 'Studypdf' && <StudyPDF />}
-        {activePage === 'to-do' && <Todo />}
+        {activePage === 'to-do' && <Todo userId={userId} />}
         {activePage === 'timetable' && <Timetable />}
         {activePage === 'settings' && <Settings />}
       </div>
