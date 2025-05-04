@@ -1,7 +1,32 @@
 .todo-container {
   padding: 20px;
-  height: 100%;
+  height: 100vh;
   margin: 0 auto;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #035550 rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #f8f4f0 0%, #f0ebe6 100%);
+}
+
+.todo-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.todo-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.todo-container::-webkit-scrollbar-thumb {
+  background-color: #035550;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.todo-container::-webkit-scrollbar-thumb:hover {
+  background-color: #024440;
 }
 
 .todo-container h1 {
@@ -16,37 +41,62 @@
   display: flex;
   gap: 10px;
   margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #d4c3b5;
 }
 
 .todo-input {
   flex: 1;
-  padding: 12px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 16px;
   font-family: 'ZH', sans-serif;
-  transition: border-color 0.3s;
+  transition: all 0.2s ease;
 }
 
 .todo-input:focus {
   outline: none;
   border-color: #035550;
+  box-shadow: 0 0 0 3px rgba(3, 85, 80, 0.1);
+}
+
+.date-input {
+  padding: 14px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'ZH', sans-serif;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #035550;
+  box-shadow: 0 0 0 3px rgba(3, 85, 80, 0.1);
 }
 
 .add-todo-btn {
-  padding: 12px 24px;
-  background: #035550;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #035550 0%, #024440 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 16px;
   cursor: pointer;
   font-family: 'ZH', sans-serif;
-  transition: transform 0.2s;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .add-todo-btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(3, 85, 80, 0.2);
+  background: linear-gradient(135deg, #024440 0%, #013330 100%);
 }
 
 .todos-list {
@@ -58,48 +108,84 @@
 .todo-item {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: all 0.2s ease;
+  gap: 16px;
+  border: 1px solid #d4c3b5;
+  margin-bottom: 8px;
 }
 
 .todo-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .todo-checkbox {
-  margin-right: 16px;
-  width: 20px;
-  height: 20px;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(3, 85, 80, 0.3);
+  border-radius: 6px;
   cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.todo-checkbox:checked {
+  background: linear-gradient(135deg, #035550 0%, #024440 100%);
+  border-color: transparent;
+}
+
+.todo-checkbox:checked::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  left: 5px;
+  top: 1px;
+}
+
+.todo-content-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
 }
 
 .todo-content {
   flex: 1;
   font-size: 16px;
   font-family: 'ZH', sans-serif;
+  color: #2c3e50;
+  transition: all 0.2s ease;
 }
 
 .todo-item.completed .todo-content {
-  text-decoration: line-through;
-  color: #888;
+  text-decoration: none;
+  color: #a0aec0;
 }
 
 .delete-todo-btn {
   background: none;
   border: none;
-  color: #ff4444;
-  font-size: 24px;
+  color: #e53e3e;
+  font-size: 20px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .todo-item:hover .delete-todo-btn {
   opacity: 1;
+}
+
+.delete-todo-btn:hover {
+  background: rgba(229, 62, 62, 0.08);
 }
 
 .todo-edit-input {
@@ -113,6 +199,117 @@
 
 .todo-edit-input:focus {
   outline: 2px solid #035550;
+}
+
+.todo-due-date {
+  font-size: 14px;
+  color: #035550;
+  padding: 6px 12px;
+  background: rgba(3, 85, 80, 0.08);
+  border-radius: 8px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.todo-overdue {
+  color: #e53e3e;
+  background: rgba(229, 62, 62, 0.1);
+}
+
+.todo-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.todo-controls-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-bar {
+  padding: 8px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'ZH', sans-serif;
+  width: 200px;
+  transition: all 0.3s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: #035550;
+  width: 300px;
+}
+
+.category-tag,
+.category-select,
+.sort-select {
+  display: none;
+}
+
+.todo-date-group {
+  margin-bottom: 32px;
+}
+
+.todo-date-header {
+  font-family: 'ZH', sans-serif;
+  color: #035550;
+  font-size: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(3, 85, 80, 0.1);
+}
+
+.date-header {
+  color: #035550;
+  font-size: 18px;
+  font-family: 'ZH', sans-serif;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(3, 85, 80, 0.1);
+  text-transform: capitalize;
+}
+
+.todo-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border: 1px solid #d4c3b5;
+  font-family: 'ZH', sans-serif;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background: rgba(3, 85, 80, 0.05);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  background: rgba(3, 85, 80, 0.08);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #035550;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #4a5568;
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {

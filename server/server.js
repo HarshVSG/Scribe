@@ -1,56 +1,59 @@
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg'); // Use pg library for PostgreSQL
-const bcrypt = require('bcrypt'); // Import bcrypt
+const mysql = require('mysql2'); // Change from pg to mysql2
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// PostgreSQL Connection
-const pool = new Pool({
-  host: process.env.DB_HOST || '127.0.0.1', // Default to localhost
-  user: process.env.DB_USER, // Use environment variable for user
-  password: process.env.DB_PASSWORD, // Use environment variable for password
-  database: process.env.DB_NAME, // Use environment variable for database name
-  port: process.env.DB_PORT, // Default to port 5432
-});
+// MySQL Connection Pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+}).promise(); // Use promise wrapper for async/await
 
-// Check if all required environment variables are set
-if (!process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-  console.error('Missing required database environment variables (DB_USER, DB_PASSWORD, DB_NAME).');
-  process.exit(1); // Exit the application
-}
-
-pool.connect((err) => {
-  if (err) {
+// Test connection
+pool.getConnection()
+  .then(connection => {
+    console.log('Connected to MySQL database');
+    connection.release();
+  })
+  .catch(err => {
     console.error('Database connection failed:', err.message);
-    console.error('Ensure PostgreSQL is running and the connection details are correct.');
-  } else {
-    console.log('Connected to PostgreSQL database');
-  }
-});
+  });
 
-// REGISTER route (with PostgreSQL)
+// REGISTER route (MySQL version)
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // First check if username already exists
-    const existingUser = await pool.query('SELECT username FROM users WHERE username = $1', [username]);
-    if (existingUser.rows.length > 0) {
+    // Check if username exists
+    const [existingUsers] = await pool.query(
+      'SELECT username FROM users WHERE username = ?', 
+      [username]
+    );
+    
+    if (existingUsers.length > 0) {
       return res.status(400).json({ error: 'Username already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id',
+    const [result] = await pool.query(
+      'INSERT INTO users (username, password) VALUES (?, ?)',
       [username, hashedPassword]
     );
+    
     res.json({ 
       message: 'User registered successfully', 
-      userId: result.rows[0].id 
+      userId: result.insertId 
     });
   } catch (err) {
     console.error('Registration error:', err);
@@ -58,29 +61,28 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// LOGIN route
+// Login route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  console.log('Login attempt for:', username);
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    const [users] = await pool.query(
+      'SELECT * FROM users WHERE username = ?',
+      [username]
+    );
     
-    if (result.rows.length === 0) {
+    if (users.length === 0) {
       return res.status(400).json({ error: 'User not found' });
     }
 
-    const user = result.rows[0];
-    const validPassword = await bcrypt.compare(password, user.password);
-    console.log('Password validation:', { valid: validPassword });
-
+    const validPassword = await bcrypt.compare(password, users[0].password);
     if (!validPassword) {
       return res.status(400).json({ error: 'Invalid password' });
     }
 
     res.json({ 
       message: 'Login successful',
-      userId: user.id
+      userId: users[0].id
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -88,90 +90,80 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// ADD NOTE route
-app.post('/addnote', (req, res) => {
-  const { title, content } = req.body;
-
-  if (!title || !content) {
-    return res.status(400).json({ error: 'Title and content are required' });
-  }
-
-  pool.query(
-    'INSERT INTO notes (title, content) VALUES ($1, $2) RETURNING id',
-    [title, content],
-    (err, result) => {
-      if (err) {
-        console.error('Error adding note:', err);
-        return res.status(500).json({ error: 'Failed to add note' });
-      }
-      res.json({ message: 'Note added successfully', noteId: result.rows[0].id });
-    }
-  );
-});
-
-// Get notes for a user
+// Notes routes
 app.get('/notes/:userId', async (req, res) => {
   const { userId } = req.params;
-  console.log('Fetching notes for userId:', userId);
-
   try {
-    const results = await pool.query(
-      'SELECT * FROM notes WHERE user_id = $1 ORDER BY created_at DESC',
+    const [notes] = await pool.query(
+      'SELECT * FROM notes WHERE user_id = ? ORDER BY created_at DESC',
       [userId]
     );
-    console.log('Fetched notes:', results.rows);
-    res.json(results.rows);
+    res.json(notes);
   } catch (err) {
-    console.error('Error fetching notes:', err);
     res.status(500).json({ error: 'Error fetching notes' });
   }
 });
 
-// Add a new note
 app.post('/add-note', async (req, res) => {
   const { title, content, userId, backgroundColor } = req.body;
-  console.log('Adding note with color:', { title, content, userId, backgroundColor });
-
   try {
-    const result = await pool.query(
-      'INSERT INTO notes (title, content, user_id, background_color) VALUES ($1, $2, $3, $4) RETURNING *',
+    const [result] = await pool.query(
+      'INSERT INTO notes (title, content, user_id, background_color) VALUES (?, ?, ?, ?)',
       [title, content, userId, backgroundColor]
     );
-    console.log('Added note:', result.rows[0]);
-    res.json({ message: 'Note added', note: result.rows[0] });
+    const [insertedNote] = await pool.query(
+      'SELECT * FROM notes WHERE id = ?',
+      [result.insertId]
+    );
+    res.json({ message: 'Note added', note: insertedNote[0] });
   } catch (err) {
-    console.error('Error adding note:', err);
     res.status(500).json({ error: 'Failed to add note' });
   }
 });
 
-// Update note endpoint - fixed
+// Update note endpoint
 app.put('/notes/:id', async (req, res) => {
   const { id } = req.params;
   const { title, content, userId, backgroundColor } = req.body;
-
   console.log('Update request:', { id, title, content, userId, backgroundColor });
 
   try {
+    let updateFields = [];
+    let values = [];
+
+    if (backgroundColor !== undefined) {
+      updateFields.push('background_color = ?');
+      values.push(backgroundColor);
+    }
+    if (title !== undefined) {
+      updateFields.push('title = ?');
+      values.push(title);
+    }
+    if (content !== undefined) {
+      updateFields.push('content = ?');
+      values.push(content);
+    }
+
+    values.push(id, userId); // Add id and userId for WHERE clause
+
     const query = `
       UPDATE notes 
-      SET title = COALESCE($1, title),
-          content = COALESCE($2, content),
-          background_color = COALESCE($3, background_color),
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4 AND user_id = $5
-      RETURNING *`;
+      SET ${updateFields.join(', ')}
+      WHERE id = ? AND user_id = ?`;
 
-    const values = [title, content, backgroundColor, id, userId];
-    const result = await pool.query(query, values);
+    const [result] = await pool.query(query, values);
     
-    console.log('Update result:', result.rows[0]);
-
-    if (result.rows.length === 0) {
+    if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Note not found' });
     }
 
-    res.json({ note: result.rows[0] });
+    // Fetch updated note
+    const [updatedNote] = await pool.query(
+      'SELECT * FROM notes WHERE id = ?',
+      [id]
+    );
+
+    res.json({ note: updatedNote[0] });
   } catch (err) {
     console.error('Error updating note:', err);
     res.status(500).json({ error: `Failed to update note: ${err.message}` });
@@ -183,11 +175,11 @@ app.get('/notes/:userId/favorites', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const results = await pool.query(
-      'SELECT * FROM notes WHERE user_id = $1 AND is_favorite = true ORDER BY created_at DESC',
+    const [results] = await pool.query(
+      'SELECT * FROM notes WHERE user_id = ? AND is_favorite = true ORDER BY created_at DESC',
       [userId]
     );
-    res.json(results.rows);
+    res.json(results);
   } catch (err) {
     console.error('Error fetching favorite notes:', err);
     res.status(500).json({ error: 'Error fetching favorite notes' });
@@ -197,20 +189,26 @@ app.get('/notes/:userId/favorites', async (req, res) => {
 // Delete notes endpoint
 app.delete('/notes', async (req, res) => {
   const { noteIds, userId } = req.body;
+  console.log('Delete request:', { noteIds, userId });
 
   if (!noteIds?.length || !userId) {
     return res.status(400).json({ error: 'Missing noteIds or userId' });
   }
 
   try {
-    const result = await pool.query(
-      'DELETE FROM notes WHERE id = ANY($1::int[]) AND user_id = $2 RETURNING id',
-      [noteIds, userId]
-    );
-    
+    const placeholders = noteIds.map(() => '?').join(',');
+    const query = `DELETE FROM notes WHERE id IN (${placeholders}) AND user_id = ?`;
+    const values = [...noteIds, userId];
+
+    const [result] = await pool.query(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'No notes found to delete' });
+    }
+
     res.json({ 
       message: 'Notes deleted successfully',
-      deletedIds: result.rows.map(row => row.id)
+      deletedIds: noteIds
     });
   } catch (err) {
     console.error('Error deleting notes:', err);
@@ -220,21 +218,25 @@ app.delete('/notes', async (req, res) => {
 
 // Add todo - Move this before the app.listen()
 app.post('/todos', async (req, res) => {
-  const { content, userId, isCompleted } = req.body;
-  console.log('Received todo request:', { content, userId, isCompleted });
+  const { content, userId, isCompleted, due_date } = req.body;
+  console.log('Received todo request:', { content, userId, isCompleted, due_date });
 
   try {
     if (!content || !userId) {
       return res.status(400).json({ error: 'Content and userId are required' });
     }
 
-    const result = await pool.query(
-      'INSERT INTO todos (content, user_id, is_completed) VALUES ($1, $2, $3) RETURNING *',
-      [content, userId, isCompleted || false]
+    const [result] = await pool.query(
+      'INSERT INTO todos (content, user_id, is_completed, due_date) VALUES (?, ?, ?, ?)',
+      [content, userId, isCompleted || false, due_date]
     );
     
-    console.log('Todo added successfully:', result.rows[0]);
-    res.json(result.rows[0]);
+    const [insertedTodo] = await pool.query(
+      'SELECT * FROM todos WHERE id = ?',
+      [result.insertId]
+    );
+    console.log('Todo added successfully:', insertedTodo[0]);
+    res.json(insertedTodo[0]);
   } catch (err) {
     console.error('Error adding todo:', err);
     res.status(500).json({ error: `Failed to add todo: ${err.message}` });
@@ -245,11 +247,11 @@ app.post('/todos', async (req, res) => {
 app.get('/todos/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
-    const result = await pool.query(
-      'SELECT * FROM todos WHERE user_id = $1 ORDER BY created_at DESC',
+    const [todos] = await pool.query(
+      'SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC',
       [userId]
     );
-    res.json(result.rows);
+    res.json(todos);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch todos' });
   }
@@ -258,27 +260,83 @@ app.get('/todos/:userId', async (req, res) => {
 // Update todo
 app.put('/todos/:id', async (req, res) => {
   const { id } = req.params;
-  const { content, isCompleted, userId } = req.body;
+  const { content, isCompleted, userId, dueDate } = req.body;
+  console.log('Update todo request:', { id, content, isCompleted, userId, dueDate });
+
   try {
-    const result = await pool.query(
-      'UPDATE todos SET content = COALESCE($1, content), is_completed = COALESCE($2, is_completed) WHERE id = $3 AND user_id = $4 RETURNING *',
-      [content, isCompleted, id, userId]
+    const [result] = await pool.query(
+      'UPDATE todos SET is_completed = ? WHERE id = ? AND user_id = ?',
+      [isCompleted, id, userId]
     );
-    res.json(result.rows[0]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Todo not found' });
+    }
+
+    // Fetch the updated todo
+    const [updatedTodo] = await pool.query(
+      'SELECT * FROM todos WHERE id = ?',
+      [id]
+    );
+
+    res.json(updatedTodo[0]);
   } catch (err) {
+    console.error('Error updating todo:', err);
     res.status(500).json({ error: 'Failed to update todo' });
   }
 });
 
-// Delete todo
+// Delete todo - fixed version
 app.delete('/todos/:id', async (req, res) => {
   const { id } = req.params;
   const { userId } = req.body;
+  console.log('Delete todo request:', { id, userId });
+
   try {
-    await pool.query('DELETE FROM todos WHERE id = $1 AND user_id = $2', [id, userId]);
+    const [result] = await pool.query(
+      'DELETE FROM todos WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Todo not found' });
+    }
+
     res.json({ message: 'Todo deleted successfully' });
   } catch (err) {
+    console.error('Error deleting todo:', err);
     res.status(500).json({ error: 'Failed to delete todo' });
+  }
+});
+
+// Comments routes
+app.get('/comments', async (req, res) => {
+  try {
+    const [comments] = await pool.query(
+      'SELECT comments.*, users.username FROM comments JOIN users ON comments.user_id = users.id ORDER BY created_at DESC LIMIT 100'
+    );
+    res.json(comments);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching comments' });
+  }
+});
+
+app.post('/comments', async (req, res) => {
+  const { content, userId } = req.body;
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO comments (content, user_id) VALUES (?, ?)',
+      [content, userId]
+    );
+    
+    const [comment] = await pool.query(
+      'SELECT comments.*, users.username FROM comments JOIN users ON comments.user_id = users.id WHERE comments.id = ?',
+      [result.insertId]
+    );
+    
+    res.json(comment[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add comment' });
   }
 });
 

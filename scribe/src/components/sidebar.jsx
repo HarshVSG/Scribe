@@ -34,6 +34,12 @@ function Sidebar({ setActivePage, setIsLoggedIn }) {
           <li className={active === 'timetable' ? 'active' : ''} onClick={() => handleClick('timetable')}>
             <span>Timetable</span>
           </li>
+          <li className={active === 'course' ? 'active' : ''} onClick={() => handleClick('course')}>
+            <span>Course</span>
+          </li>
+          <li className={active === 'comments' ? 'active' : ''} onClick={() => handleClick('comments')}>
+            <span>Chat</span>
+          </li>
         </ul>
         <button className="logout-btn" onClick={() => setIsLoggedIn(false)}>Logout</button>
         <h2>Scribe</h2>

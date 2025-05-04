@@ -4,6 +4,8 @@ import Todo from './to-do';
 import Timetable from './timetable';
 import StudyPDF from './studypdf';
 import Settings from './settings';
+import Course from './course';
+import Comments from './comments';
 
 function MainContent({ activePage, userId }) {
     return (
@@ -13,6 +15,8 @@ function MainContent({ activePage, userId }) {
         {activePage === 'to-do' && <Todo userId={userId} />}
         {activePage === 'timetable' && <Timetable />}
         {activePage === 'settings' && <Settings />}
+        {activePage === 'course' && <Course />}
+        {activePage === 'comments' && <Comments userId={userId} />}
       </div>
     );
 }

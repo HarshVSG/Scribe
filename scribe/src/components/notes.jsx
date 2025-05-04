@@ -59,7 +59,7 @@ function Notes({ userId }) {
           title: formData.title,
           content: formData.content,
           userId: parseInt(userId),
-          backgroundColor: '#fcf3ee'
+          backgroundColor: '#ffffff'  // Changed from '#fcf3ee' to white
         });
 
         if (response.data.note) {
@@ -89,17 +89,26 @@ function Notes({ userId }) {
   };
 
   const handleColorChange = async (noteId, color, e) => {
-    e.stopPropagation(); // Prevent note from opening when selecting color
+    e.stopPropagation();
     try {
+      console.log('Changing color:', { noteId, color });
       const response = await axios.put(`http://localhost:5001/notes/${noteId}`, {
         backgroundColor: color,
         userId: parseInt(userId)
       });
+      
       if (response.data && response.data.note) {
-        await fetchNotes();
+        setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === noteId 
+              ? { ...note, background_color: color }
+              : note
+          )
+        );
       }
     } catch (error) {
-      console.error('Error updating note color:', error);
+      console.error('Error updating color:', error);
+      alert('Failed to update note color');
     }
   };
 
@@ -109,19 +118,28 @@ function Notes({ userId }) {
     setFormData({ title: '', content: '' });
   };
 
-  // Add delete handler
   const handleDelete = async () => {
+    if (!selectedNotes.length) return;
+    
     try {
+      console.log('Deleting notes:', selectedNotes);
       const response = await axios.delete('http://localhost:5001/notes', {
-        data: { noteIds: selectedNotes, userId }
+        data: {
+          noteIds: selectedNotes,
+          userId: parseInt(userId)
+        }
       });
+
       if (response.data.deletedIds) {
-        await fetchNotes();
+        setNotes(prevNotes => 
+          prevNotes.filter(note => !selectedNotes.includes(note.id))
+        );
         setSelectedNotes([]);
         setIsSelectionMode(false);
       }
     } catch (error) {
       console.error('Error deleting notes:', error);
+      alert('Failed to delete notes');
     }
   };
 
