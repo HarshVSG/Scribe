@@ -6,8 +6,8 @@
   scrollbar-gutter: stable;
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: #035550 rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, #f8f4f0 0%, #f0ebe6 100%);
+  scrollbar-color: #06668d rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #173845 0%, #070a0d 100%);
 }
 
 .todo-container::-webkit-scrollbar {
@@ -20,7 +20,7 @@
 }
 
 .todo-container::-webkit-scrollbar-thumb {
-  background-color: #035550;
+  background-color: #06668d;
   border-radius: 4px;
   opacity: 0.8;
 }
@@ -30,9 +30,9 @@
 }
 
 .todo-container h1 {
-  color: black;
+  color: #ffffff;
   font-family: 'ZH', sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   text-align: left;
   margin-bottom: 30px;
 }
@@ -41,11 +41,11 @@
   display: flex;
   gap: 10px;
   margin-bottom: 30px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(23, 56, 69, 0.95);
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border: 1px solid #d4c3b5;
+  border: 1px solid #387685;
 }
 
 .todo-input {
@@ -60,8 +60,8 @@
 
 .todo-input:focus {
   outline: none;
-  border-color: #035550;
-  box-shadow: 0 0 0 3px rgba(3, 85, 80, 0.1);
+  border-color: #06668d;
+  box-shadow: 0 0 0 3px rgba(6, 102, 141, 0.1);
 }
 
 .date-input {
@@ -82,7 +82,7 @@
 
 .add-todo-btn {
   padding: 14px 28px;
-  background: linear-gradient(135deg, #035550 0%, #024440 100%);
+  background: #54090c;
   color: white;
   border: none;
   border-radius: 12px;
@@ -96,7 +96,7 @@
 .add-todo-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(3, 85, 80, 0.2);
-  background: linear-gradient(135deg, #024440 0%, #013330 100%);
+  background: #db1112;
 }
 
 .todos-list {
@@ -109,12 +109,12 @@
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(23, 56, 69, 0.95);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   transition: all 0.2s ease;
   gap: 16px;
-  border: 1px solid #d4c3b5;
+  border: 1px solid #387685;
   margin-bottom: 8px;
 }
 
@@ -128,7 +128,7 @@
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  border: 2px solid rgba(3, 85, 80, 0.3);
+  border: 2px solid rgba(6, 102, 141, 0.3);
   border-radius: 6px;
   cursor: pointer;
   position: relative;
@@ -136,7 +136,7 @@
 }
 
 .todo-checkbox:checked {
-  background: linear-gradient(135deg, #035550 0%, #024440 100%);
+  background: linear-gradient(135deg, #06668d 0%, #0d808 100%);
   border-color: transparent;
 }
 
@@ -159,13 +159,14 @@
   flex: 1;
   font-size: 16px;
   font-family: 'ZH', sans-serif;
-  color: #2c3e50;
+  color: #ffffff;
   transition: all 0.2s ease;
+  font-weight: 400;
 }
 
 .todo-item.completed .todo-content {
   text-decoration: none;
-  color: #a0aec0;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .delete-todo-btn {
@@ -203,9 +204,9 @@
 
 .todo-due-date {
   font-size: 14px;
-  color: #035550;
+  color: #db1112;
   padding: 6px 12px;
-  background: rgba(3, 85, 80, 0.08);
+  background: rgba(219, 17, 18, 0.1);
   border-radius: 8px;
   white-space: nowrap;
   font-weight: 500;
@@ -263,13 +264,13 @@
 }
 
 .date-header {
-  color: #035550;
+  color: #ffffff;
   font-size: 18px;
   font-family: 'ZH', sans-serif;
   font-weight: 600;
   margin: 24px 0 16px 0;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(3, 85, 80, 0.1);
+  border-bottom: 2px solid rgba(219, 17, 18, 0.3);
   text-transform: capitalize;
 }
 
@@ -289,27 +290,31 @@
 .stat-item {
   text-align: center;
   padding: 16px;
-  background: rgba(3, 85, 80, 0.05);
+  background: rgba(7, 10, 13, 0.7);
   border-radius: 12px;
   transition: all 0.2s ease;
+  border: 1px solid #387685;
 }
 
 .stat-item:hover {
   transform: translateY(-2px);
-  background: rgba(3, 85, 80, 0.08);
+  background: rgba(23, 56, 69, 0.95);
+  border-color: #db1112;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 600;
-  color: #035550;
+  color: #db1112;
   margin-bottom: 4px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
   font-size: 14px;
-  color: #4a5568;
+  color: #ffffff;
   font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 @media (max-width: 768px) {

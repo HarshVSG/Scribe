@@ -340,6 +340,61 @@ app.post('/comments', async (req, res) => {
   }
 });
 
+// Timetable routes
+app.get('/timetable/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const [schedule] = await pool.query(
+      'SELECT * FROM timetables WHERE user_id = ? ORDER BY day_of_week, start_time',
+      [userId]
+    );
+    res.json(schedule);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching schedule' });
+  }
+});
+
+app.post('/timetable', async (req, res) => {
+  const { dayOfWeek, startTime, endTime, subject, room, userId } = req.body;
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO timetables (day_of_week, start_time, end_time, subject, room, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [dayOfWeek, startTime, endTime, subject, room, userId]
+    );
+    res.json({ id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add class' });
+  }
+});
+
+app.put('/timetable/:id', async (req, res) => {
+  const { id } = req.params;
+  const { dayOfWeek, startTime, endTime, subject, room, userId } = req.body;
+  try {
+    await pool.query(
+      'UPDATE timetables SET day_of_week = ?, start_time = ?, end_time = ?, subject = ?, room = ? WHERE id = ? AND user_id = ?',
+      [dayOfWeek, startTime, endTime, subject, room, id, userId]
+    );
+    res.json({ message: 'Updated successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update class' });
+  }
+});
+
+app.delete('/timetable/:id', async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+  try {
+    await pool.query(
+      'DELETE FROM timetables WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+    res.json({ message: 'Deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete class' });
+  }
+});
+
 // Make sure this is at the very end of the file
 app.listen(5001, () => {
   console.log('Server running on port 5001');

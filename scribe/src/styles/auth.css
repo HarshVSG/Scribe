@@ -4,25 +4,29 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #173845 0%, #070a0d 100%);
   padding: 20px;
 }
 
 .auth-container {
-  background: white;
+  background: rgba(7, 10, 13, 0.7);
   padding: 40px;
   border-radius: 10px;
+  border: 1px solid #387685;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   font-family: 'ZH', sans-serif;
 }
 
 .auth-title {
   text-align: center;
-  color: #333;
+  color: #ffffff;
   margin-bottom: 30px;
   font-size: 24px;
+  font-weight: 500;
 }
 
 .auth-form {
@@ -33,52 +37,68 @@
 
 .auth-input {
   padding: 12px;
-  border: 2px solid #e0e0e0;
+  background: rgba(23, 56, 69, 0.95);
+  border: 1px solid #387685;
   border-radius: 6px;
   font-size: 16px;
-  transition: border-color 0.3s;
+  color: #ffffff;
+  transition: all 0.3s ease;
   font-family: 'ZH', sans-serif;
 }
 
 .auth-input:focus {
-  border-color: #035550;
+  border-color: #db1112;
   outline: none;
 }
 
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .auth-button {
-  background-color: #035550;
+  background-color: #54090c;
   color: white;
   padding: 12px;
   border: none;
   border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
   font-family: 'ZH', sans-serif;
 }
 
 .auth-button:hover {
-  background-color: #023d3a;
+  background-color: #db1112;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(219, 17, 18, 0.2);
 }
 
 .auth-switch {
   text-align: center;
   margin-top: 20px;
+  color: #ffffff;
   font-family: 'ZH', sans-serif;
 }
 
 .auth-switch button {
   background: none;
   border: none;
-  color: #035550;
+  color: #db1112;
   text-decoration: underline;
   cursor: pointer;
   font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.auth-switch button:hover {
+  color: #54090c;
 }
 
 .auth-error {
-  color: #f44336;
+  color: #db1112;
   text-align: center;
   margin-top: 10px;
   font-size: 14px;
+  font-weight: 500;
 }
