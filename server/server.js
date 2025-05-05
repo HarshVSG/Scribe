@@ -395,6 +395,67 @@ app.delete('/timetable/:id', async (req, res) => {
   }
 });
 
+// Get all courses
+app.get('/courses', async (req, res) => {
+  try {
+    const [courses] = await pool.query('SELECT * FROM courses ORDER BY course_code');
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching courses' });
+  }
+});
+
+// Get materials for a course
+app.get('/materials/:courseId', async (req, res) => {
+  try {
+    const [materials] = await pool.query(
+      'SELECT * FROM course_materials WHERE course_id = ? ORDER BY unit_number',
+      [req.params.courseId]
+    );
+    res.json(materials);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching materials' });
+  }
+});
+
+// Get all unique subjects
+app.get('/studypdf/subjects', async (req, res) => {
+  try {
+    const [subjects] = await pool.query(
+      'SELECT DISTINCT subject_code, subject_name FROM studypdf'
+    );
+    res.json(subjects);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching subjects' });
+  }
+});
+
+// Get materials by subject
+app.get('/studypdf/:subjectCode', async (req, res) => {
+  try {
+    const [materials] = await pool.query(
+      'SELECT * FROM studypdf WHERE subject_code = ? ORDER BY unit_number, material_type',
+      [req.params.subjectCode]
+    );
+    res.json(materials);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching materials' });
+  }
+});
+
+// Get materials by subject and unit
+app.get('/studypdf/:subjectCode/:unit', async (req, res) => {
+  try {
+    const [materials] = await pool.query(
+      'SELECT * FROM studypdf WHERE subject_code = ? AND unit_number = ? ORDER BY material_type',
+      [req.params.subjectCode, req.params.unit]
+    );
+    res.json(materials);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching materials' });
+  }
+});
+
 // Make sure this is at the very end of the file
 app.listen(5001, () => {
   console.log('Server running on port 5001');

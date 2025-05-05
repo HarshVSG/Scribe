@@ -12,7 +12,6 @@ h2 {
     font-family: 'ZH', sans-serif;
     align-self: center;
     justify-self: center;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 .logout-btn {
     padding: 10px;
@@ -46,13 +45,14 @@ h2 {
     left: 0;
     height: 100vh;
     width: 19%;
-    border-right: 1px solid #d4c3b5;
+    border-right: 1px solid #387685;
     border-top: 0;
     border-left: 0;
     border-bottom: 0;
-    background: url('../assets/images/xhziWOv.jpg') no-repeat center center;
-    background-size: cover;
+    background: linear-gradient(180deg, #173845 0%, #070a0d 100%);
     z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .sidebar ul {

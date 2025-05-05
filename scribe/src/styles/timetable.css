@@ -37,18 +37,30 @@
 }
 
 .day-column {
+    position: relative;
     background: rgba(23, 56, 69, 0.95);
     border-radius: 16px;
     padding: 20px;
+    padding-top: 50px;  /* Increased padding-top to make room for header */
     border: 1px solid #387685;
+    margin-top: 30px;   /* Added margin-top for header space */
 }
 
 .day-column h2 {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
     color: #ffffff;
-    font-size: 1.2rem;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid rgba(219, 17, 18, 0.3);
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 8px 24px;
+    border-radius: 16px;
+    margin: 0;
+    background: rgba(219, 17, 18, 0.2);
+    border: 1px solid rgba(219, 17, 18, 0.3);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 .classes-list {

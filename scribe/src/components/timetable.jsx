@@ -37,43 +37,43 @@ function Timetable({ userId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Validate form data
       if (!formData.dayOfWeek || !formData.startTime || !formData.endTime || !formData.subject) {
         alert('Please fill in all required fields');
         return;
       }
 
-      if (editingEntry) {
-        await axios.put(`http://localhost:5001/timetable/${editingEntry.id}`, {
-          dayOfWeek: formData.dayOfWeek,
-          startTime: formData.startTime,
-          endTime: formData.endTime,
-          subject: formData.subject,
-          room: formData.room,
-          userId
-        });
-      } else {
-        await axios.post('http://localhost:5001/timetable', {
-          dayOfWeek: formData.dayOfWeek,
-          startTime: formData.startTime,
-          endTime: formData.endTime,
-          subject: formData.subject,
-          room: formData.room,
-          userId
+      if (!userId) {
+        alert('User ID is required');
+        return;
+      }
+
+      console.log('Submitting timetable entry:', {
+        ...formData,
+        userId
+      });
+
+      const response = await axios.post('http://localhost:5001/timetable', {
+        dayOfWeek: formData.dayOfWeek,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        subject: formData.subject,
+        room: formData.room,
+        userId: parseInt(userId)
+      });
+
+      if (response.data.id) {
+        await fetchSchedule();
+        setShowForm(false);
+        setFormData({
+          dayOfWeek: '',
+          startTime: '',
+          endTime: '',
+          subject: '',
+          room: ''
         });
       }
-      await fetchSchedule();
-      setShowForm(false);
-      setEditingEntry(null);
-      setFormData({
-        dayOfWeek: '',
-        startTime: '',
-        endTime: '',
-        subject: '',
-        room: ''
-      });
     } catch (error) {
-      console.error('Error saving entry:', error);
+      console.error('Error saving class:', error);
       alert('Failed to save class. Please try again.');
     }
   };

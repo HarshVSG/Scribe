@@ -13,7 +13,7 @@ function MainContent({ activePage, userId }) {
         {activePage === 'Notes' && <Notes userId={userId} />}
         {activePage === 'Studypdf' && <StudyPDF />}
         {activePage === 'to-do' && <Todo userId={userId} />}
-        {activePage === 'timetable' && <Timetable />}
+        {activePage === 'timetable' && <Timetable userId={userId} />}
         {activePage === 'settings' && <Settings />}
         {activePage === 'course' && <Course />}
         {activePage === 'comments' && <Comments userId={userId} />}
